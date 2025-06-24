@@ -28,15 +28,31 @@
     "name": "clean_dpu",
     "group": "scripts",
     "description": "\u6e05\u7406dpu\uff0c\u7528\u4e8e\u6a21\u62dfsoc\u91cd\u542f",
-    "command": "cat << 'EOF' > /root/wubl/simulate_cold_restart_of_soc.py\nimport os\nfrom dpuagent.services.vsdk_service import VsdkService\n\nRECOVERY_LOCK_FILE = \"/var/run/dpuagent/recovered.lock\"\nTEMP_RECORD_FILENAME = '/var/run/dpuagent/temporary_records.log'\n\nvsdk_svc = VsdkService()\nblk_used, xsc_used, unused_uuids = vsdk_svc.get_uuid_usage()\nprint(f\"blk used uuid: {blk_used}, xsc net used uuid: {xsc_used}\")\nprint(\"-----------------------------\")\nprint(\"start clean xscnet\")\nfor uuid in xsc_used:\n    if uuid == 0:\n        continue\n    print(f\"delete xscnet {uuid}\")\n    vsdk_svc.delete_xscnet(uuid)\n\nprint(\"-----------------------------\")\nprint(\"start clean blk\")\nfor uuid in blk_used:\n    print(f\"delete blk {uuid}\")\n    vsdk_svc.delete_vblk(uuid)\n\nprint(\"-----------------------------\")\nprint(\"start clean bdev\")\nbdevs = vsdk_svc.bdev_get_bdevs()\nfor bdev in bdevs:\n    if bdev[\"product_name\"] == \"AIO disk\":\n        print(f\"delete aio bdev {bdev['name']}\")\n        vsdk_svc.delete_bdev_aio(bdev[\"name\"])\n    if bdev[\"product_name\"] == \"NVMe disk\":\n        print(f\"detach virtblk {bdev['name']}\")\n        controller_name = bdev[\"name\"].rsplit('n', 1)[0]\n        vsdk_svc.bdev_nvme_detach_controller(controller_name)\n\nif os.path.exists(RECOVERY_LOCK_FILE):\n    print(\"-----------------------------\")\n    print(f\"delete recovered lock {RECOVERY_LOCK_FILE}\")\n    os.remove(RECOVERY_LOCK_FILE)\nprint(\"-----------------------------\")\n\nif os.path.exists(TEMP_RECORD_FILENAME):\n    print(\"-----------------------------\")\n    print(f\"delete temp record file {TEMP_RECORD_FILENAME}\")\n    os.remove(TEMP_RECORD_FILENAME)\nprint(\"-----------------------------\")\nEOF\n\npython3 /root/wubl/simulate_cold_restart_of_soc.py\nip link delete dev dhcp1\nsystemctl restart ovs-dpdk\n\necho \"Successfully cleaned up all resources.\"",
-    "copy_count": 0
+    "command": "cat << 'EOF' > /root/wubl/simulate_cold_restart_of_soc.py\nimport os\nfrom dpuagent.services.vsdk_service import VsdkService\n\nRECOVERY_LOCK_FILE = \"/var/run/dpuagent/recovered.lock\"\nTEMP_RECORD_FILENAME = '/var/run/dpuagent/temporary_records.log'\n\nvsdk_svc = VsdkService()\nblk_used, xsc_used, unused_uuids = vsdk_svc.get_uuid_usage()\nprint(f\"blk used uuid: {blk_used}, xsc net used uuid: {xsc_used}\")\nprint(\"-----------------------------\")\nprint(\"start clean xscnet\")\nfor uuid in xsc_used:\n    if uuid == 0:\n        continue\n    print(f\"delete xscnet {uuid}\")\n    vsdk_svc.delete_xscnet(uuid)\n\nprint(\"-----------------------------\")\nprint(\"start clean blk\")\nfor uuid in blk_used:\n    print(f\"delete blk {uuid}\")\n    vsdk_svc.delete_vblk(uuid)\n\nprint(\"-----------------------------\")\nprint(\"start clean bdev\")\nbdevs = vsdk_svc.bdev_get_bdevs()\nfor bdev in bdevs:\n    if bdev[\"product_name\"] == \"AIO disk\":\n        print(f\"delete aio bdev {bdev['name']}\")\n        vsdk_svc.delete_bdev_aio(bdev[\"name\"])\n    if bdev[\"product_name\"] == \"NVMe disk\":\n        print(f\"detach virtblk {bdev['name']}\")\n        controller_name = bdev[\"name\"].rsplit('n', 1)[0]\n        vsdk_svc.bdev_nvme_detach_controller(controller_name)\n\nif os.path.exists(RECOVERY_LOCK_FILE):\n    print(\"-----------------------------\")\n    print(f\"delete recovered lock {RECOVERY_LOCK_FILE}\")\n    os.remove(RECOVERY_LOCK_FILE)\nprint(\"-----------------------------\")\n\nif os.path.exists(TEMP_RECORD_FILENAME):\n    print(\"-----------------------------\")\n    print(f\"delete temp record file {TEMP_RECORD_FILENAME}\")\n    os.remove(TEMP_RECORD_FILENAME)\nprint(\"-----------------------------\")\nEOF\n\npython3 /root/wubl/simulate_cold_restart_of_soc.py\nip link delete dev dhcp1\nsystemctl restart ovs-dpdk\n\necho \"Successfully cleaned up all resources.\"\n\n",
+    "copy_count": 2
   },
   {
     "id": 5,
     "name": "sshfs_mount_auto",
     "group": "scripts",
     "description": "\u4f7f\u7528ssfs\u6302\u8f7d\u5171\u4eab\u76ee\u5f55/auto",
-    "command": "mkdir -p /auto\nsshfs wubl@10.0.3.248:/auto /auto",
+    "command": "mkdir -p /auto\nsshfs wubl@10.0.3.248:/auto /auto\n\n",
+    "copy_count": 1
+  },
+  {
+    "id": 6,
+    "name": "list_nics_info",
+    "group": "cmd",
+    "description": "\u5217\u51fahost\u6240\u6709nic\u7684\u4fe1\u606f",
+    "command": "yuncli agent -d 15:00.0 --list_all_nic_info\n\n",
+    "copy_count": 4
+  },
+  {
+    "id": 7,
+    "name": "uvicorn",
+    "group": "cmd",
+    "description": "\u542f\u52a8dpuagent",
+    "command": "uvicorn dpuagent.main:app --host 0.0.0.0 --port 8000 --env-file /etc/dpuagent.conf",
     "copy_count": 0
   }
 ]

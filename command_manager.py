@@ -111,10 +111,11 @@ class CommandManager:
         参数解析方法，匹配以下格式：
         1. 必需参数: <param>
         2. 可选参数: <param=default> 或 <param="default with spaces">
+        只匹配变量名（字母、数字、下划线），避免误识别 shell 重定向等
         """
         params = OrderedDict()
-        # 匹配 <param> 或 <param=value> 或 <param="value with spaces">
-        pattern = r'<([^>=]+)(?:=([^>]*))?>'
+        # 只匹配 <param> 或 <param=default>，param 只能是字母、数字、下划线，且不能以数字开头
+        pattern = r'<([a-zA-Z_][a-zA-Z0-9_]*)(?:=([^>]*))?>'
         
         for match in re.finditer(pattern, command):
             param_name, default_value = match.groups()

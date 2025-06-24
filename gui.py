@@ -391,9 +391,13 @@ class CommandRetrieverApp:
         def on_submit():
             name = name_entry.get()
             group = group_var.get().strip()
-            command = self.cmd_text.get("1.0", tk.END).strip()
+            # 只去掉首尾空格，不去掉换行
+            command = self.cmd_text.get("1.0", tk.END)
+            # 或者如果你只想去掉最后自动多出来的一个换行（Text组件通常会多一个），可以这样：
+            if command.endswith('\n'):
+                command = command[:-1]
 
-            if not name or not command:
+            if not name or not command.strip():
                 messagebox.showerror("错误", "名称和命令内容不能为空")
                 return
 
@@ -465,7 +469,7 @@ class CommandRetrieverApp:
                 'name': name_entry.get(),
                 'group': group_entry.get(),
                 'description': desc_entry.get(),
-                'command': cmd_text.get("1.0", tk.END).strip()
+                'command': cmd_text.get("1.0", tk.END)
             }
 
             if not updates['name'] or not updates['command']:
@@ -490,7 +494,17 @@ class CommandRetrieverApp:
         cancel_btn.pack(side=tk.LEFT, padx=5)
 
         name_entry.focus()
-        edit_window.bind('<Return>', lambda e: on_submit())
+
+        # 只在 Entry 聚焦时允许回车提交
+        def on_return(event):
+            widget = event.widget
+            # 只有 Entry 时才提交
+            if isinstance(widget, tk.Entry):
+                on_submit()
+                return "break"  # 阻止默认行为
+
+        for entry in [name_entry, group_entry, desc_entry]:
+            entry.bind('<Return>', on_return)
 
     def _delete_command(self):
         """删除命令"""
